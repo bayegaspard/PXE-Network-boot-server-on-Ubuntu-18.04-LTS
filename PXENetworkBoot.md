@@ -168,7 +168,7 @@ wget http://releases.ubuntu.com/18.04/ubuntu-18.04.3-desktop-amd64.iso
 - We now add the entry in the default file as seen below.
 ![](https://i.imgur.com/lUKBxwV.png)
 - Now let's test this with our test VM.
-{%youtube n2XG6K3_53U %} 
+https://youtu.be/n2XG6K3_53U
  YAYY!
 - Working !! :)
 
