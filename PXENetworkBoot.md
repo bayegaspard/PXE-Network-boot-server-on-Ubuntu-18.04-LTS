@@ -20,7 +20,6 @@ description: Breif details on PXE & Booting , partitions .
 
 - For this task, I used this video tutorial which helped me go through the installation. It is very simple and anyone following it will get to install both the virtual machine and the container without any hurdles.
 
-    {%youtube QbmRXJJKsvs %} 
     *Video on creation and installing VMs using virtualBox on Ubuntu 18.04 LTS.
     source : https://youtu.be/QbmRXJJKsvs***
  - After following the video, we will have something similar to this (see screenshot below). 
@@ -56,9 +55,11 @@ code.orange {
 - But I realised there is this better technique less stressful and easy.This is what we are going to use for this lab.
 - This is done by creating a NAT network between the PXE server and connect the client PXE PC to this server via the same NAT network of the server.
 - On VirtualBox, we go to file, preference and then network.We edit the addresses and enable DHCP. See picture below.
+(Source: https://www.techrepublic.com/article/how-to-create-multiple-nat-networks-in-virtualbox/)
 ![](https://i.imgur.com/2A1m1IE.png)
 
 - On our PXE server, we go to settings, network and select adapter NAT network as seen below.
+
 ![](https://i.imgur.com/ZrSmytf.png)
 
 
@@ -79,15 +80,16 @@ code.orange {
 ![](https://i.imgur.com/fkbEHCw.png)
 
 
-- Now, we rename our /etc/dnsmasq.conf file to /etc/dnsmasq.conf.backup.This is done using the following command
+- Now, we create a backup file from our config file by renaming our /etc/dnsmasq.conf file to /etc/dnsmasq.conf.backup.This is done using the following command as seen below.
 ![](https://i.imgur.com/n5WYlEb.png)
 - Then we create a new /etc/dnsmasq.conf file and configure it as follows:
 ![](https://i.imgur.com/axJwa66.png)
-- We congifure as follows :
+- In this file, we will precise the location of the TFTP server that will host the PXElinux.0 boot program. So, We congifure as follows :
 ![](https://i.imgur.com/ZVsFkL7.png)
-- The next thing is to create the TFTP root directory in /tftpboot/tftp that will host our pxelinux.0 boot program.
-![](https://i.imgur.com/MDsIMHS.png)
-- Then we restart our DNSmasq and see its status using systemctl command.
+- The next thing is to create the TFTP root directory in /tftpboot/tftp that will host our pxelinux.0 boot program as precised in the dnsmasq config file.
+![](https://i.imgur.com/u8F8FL9.png)
+
+- Then we restart our DNSmasq and see its status using <code>sudo systemctl restart dnsmasq</code> command.
 - ![](https://i.imgur.com/Ac7RuNv.png)
 
 ---
@@ -95,8 +97,8 @@ code.orange {
 ### 3. Lets install and configure NFS server
 
 - The Network File System (NFS)  is a distributed file system protocol which allows a server to share directories and files with clients over a network. For more details follow this link.(https://vitux.com/install-nfs-server-and-client-on-ubuntu/).
-- We use the following command to install and we can update using "apt-get update"
-- ![](https://i.imgur.com/xBfE5Yr.png)
+- We use the following command to install and we can update using <code> apt-get update</code>
+![](https://i.imgur.com/xBfE5Yr.png)
 - We then create the NFS directory inside the TFTPBoot directory we previously created.
 - ![](https://i.imgur.com/AQmdmDx.png)
 - We will open and configure the exports config file as follows which defines the way pxelinux.0 is used.
@@ -113,7 +115,22 @@ code.orange {
 - We use the following commands : 
 ![](https://i.imgur.com/vLR3IEX.png)
 
-- We also copy the ldlinux.c32, libcom32.c32, libutil.c32, vesamenu.c32 files to the tftp directory using the command: 
+- Before the we will be able to boot to the menu, we must have these files(none of them should be absent).
+<code>cd/isolinux.bin
+</code>
+<code>
+cd/isolinux/ldlinux.c32
+</code>
+<code>
+cd/isolinux/libcom32.c32
+</code>
+<code>
+cd/isolinux/libutil.c32
+</code>
+<code>
+cd/isolinux/vesamenu.c32
+</code>
+- So as a result, we have to make them available by copying the ldlinux.c32, libcom32.c32, libutil.c32, vesamenu.c32 files to the tftp directory using the command: 
 <code class="orange">sudo cp -v /usr/lib/syslinux/modules/bios/{ldlinux.c32,
 libcom32.c32,libutil.c32,
 vesamenu.c32} /netboot/tftp</code>
@@ -122,10 +139,15 @@ vesamenu.c32} /netboot/tftp</code>
 <code class="blue">
 sudo mkdir /tftpboot/tftp/pxelinux.cfg
 </code> 
-- We then create the PXE bootloader’s default configuration file /tftpboot/tftp/pxelinux.cfg/default using the command : 
+- We then create the PXE bootloader’s default configuration file /tftpboot/tftp/pxelinux.cfg/default using the command :
+ 
 <code class="blue">
-sudo touch /tftpboot/tftp/pxelinux.cfg/default
+touch /tftpboot/tftp/pxelinux.cfg/default
 </code>
+
+![](https://i.imgur.com/iYzJWej.png)
+
+
 - ### Voila !
 - TFTP server is now able to serve all the required bootloader files over the network.
 ---
@@ -167,13 +189,15 @@ wget http://releases.ubuntu.com/18.04/ubuntu-18.04.3-desktop-amd64.iso
 ![](https://i.imgur.com/RhhT5Ql.png)
 - We now add the entry in the default file as seen below.
 ![](https://i.imgur.com/lUKBxwV.png)
-- Now let's test this with our test VM. Watch how it works from the link below.
-https://youtu.be/n2XG6K3_53U
-- YAYY!
-- Working !! :)
+- Now let's test this with our test VM.
+- PXE boot menu
+![](https://i.imgur.com/D5aFap4.png)
+- Booting via the network. we click install to proceed with the installation.
+![](https://i.imgur.com/ejn1PA0.png)
 
+### Question: why not run your DHCP service on the SNE network directly?
+- Ans. First, considering the fact that DHCP servers on a network work under the principle of DORA (Discover, Offer, Request and Acknowledge), If we run our own DHCP service on SNE networt directly, during the discover process where SNE clients PC send broadcasts to discover available DHCP servers in order to request for an IP, if our DHCP service reply before the legitimate SNE DHCP server, the PC will be issued an IP from our DHCP pools of IP which is not suitable because it may cause ip conflicting .This will also make this client PC get disconnected with the outside network.A technique to make this possible is usually by assigning these 2 DHCP servers address pools of the same network that don't overlap.For example, From 192.168.1.100 to 192.168.1.150 and the second server would then issue 192.168.1.151 to 192.168.1.200.
 
-# :100: :muscle: :tada:
 
 
 
